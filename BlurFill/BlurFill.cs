@@ -131,6 +131,23 @@ namespace BlurFillEffect
             Amount3 = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Amount3).Value;
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
+
+
+            Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
+
+            double ratio = (float)selection.Height / (float)selection.Width;
+
+            Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap();
+
+            Bitmap croppedBitmap = TrimBitmap(srcBitmap, ratio, Amount3.First, Amount3.Second);
+
+            Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
+
+            enlargedSurface = new Surface(srcArgs.Surface.Size);
+            bluredSurface = new Surface(srcArgs.Surface.Size);
+            lightSurface = new Surface(srcArgs.Surface.Size);
+
+            enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
         }
 
         protected override unsafe void OnRender(Rectangle[] rois, int startIndex, int length)
@@ -150,6 +167,10 @@ namespace BlurFillEffect
         #endregion
 
         private BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
+
+        Surface enlargedSurface;
+        Surface bluredSurface;
+        Surface lightSurface;
 
         static Bitmap TrimBitmap(Bitmap source, double ratio, double offsetX, double offsetY)
         {
@@ -282,23 +303,6 @@ namespace BlurFillEffect
 
         void Render(Surface dst, Surface src, Rectangle rect)
         {
-            Rectangle selection = EnvironmentParameters.GetSelection(src.Bounds).GetBoundsInt();
-
-            double ratio = (float)selection.Height / (float)selection.Width;
-
-            Bitmap srcBitmap = src.CreateAliasedBitmap();
-
-            Bitmap croppedBitmap = TrimBitmap(srcBitmap, ratio, Amount3.First, Amount3.Second);
-
-            Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
-
-            Surface enlargedSurface = new Surface(src.Size);
-
-            enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
-
-            Surface bluredSurface = new Surface(enlargedSurface.Size);
-            Surface lightSurface = new Surface(enlargedSurface.Size);
-
             // Setup for calling the Gaussian Blur effect
             GaussianBlurEffect blurEffect = new GaussianBlurEffect();
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
@@ -317,7 +321,7 @@ namespace BlurFillEffect
             bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(lightSurface), new RenderArgs(bluredSurface));
             // Call the Brightness and Contrast Adjustment function
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
-            
+
             for (int y = rect.Top; y < rect.Bottom; y++)
             {
                 if (IsCancelRequested) return;
