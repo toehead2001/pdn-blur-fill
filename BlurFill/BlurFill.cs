@@ -90,7 +90,8 @@ namespace BlurFillEffect
         {
             Amount1,
             Amount2,
-            Amount3
+            Amount3,
+            Amount4
         }
 
         protected override PropertyCollection OnCreatePropertyCollection()
@@ -100,6 +101,7 @@ namespace BlurFillEffect
             props.Add(new Int32Property(PropertyNames.Amount1, 10, 0, 200));
             props.Add(new Int32Property(PropertyNames.Amount2, 0, -100, 100));
             props.Add(new DoubleVectorProperty(PropertyNames.Amount3, Pair.Create(0.0, 0.0), Pair.Create(-1.0, -1.0), Pair.Create(+1.0, +1.0)));
+            props.Add(new BooleanProperty(PropertyNames.Amount4, true));
 
             return new PropertyCollection(props);
         }
@@ -120,6 +122,8 @@ namespace BlurFillEffect
             Rectangle selection3 = EnvironmentParameters.GetSelection(EnvironmentParameters.SourceSurface.Bounds).GetBoundsInt();
             ImageResource imageResource3 = ImageResource.FromImage(EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
             configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
+            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.DisplayName, string.Empty);
+            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.Description, "Keep original image");
 
             return configUI;
         }
@@ -129,6 +133,7 @@ namespace BlurFillEffect
             Amount1 = newToken.GetProperty<Int32Property>(PropertyNames.Amount1).Value;
             Amount2 = newToken.GetProperty<Int32Property>(PropertyNames.Amount2).Value;
             Amount3 = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Amount3).Value;
+            Amount4 = newToken.GetProperty<BooleanProperty>(PropertyNames.Amount4).Value;
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
 
@@ -164,6 +169,7 @@ namespace BlurFillEffect
         int Amount1 = 10; // [-100,100] Blur Radius
         int Amount2 = -100; // [-100,100] Brightness
         Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
+        bool Amount4 = true; // [0,1] Keep original image
         #endregion
 
         private BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
@@ -327,7 +333,14 @@ namespace BlurFillEffect
                 if (IsCancelRequested) return;
                 for (int x = rect.Left; x < rect.Right; x++)
                 {
-                    dst[x, y] = normalOp.Apply(lightSurface.GetBilinearSample(x, y), src[x, y]); 
+                    if (Amount4)
+                    {
+                        dst[x, y] = normalOp.Apply(lightSurface.GetBilinearSample(x, y), src[x, y]);
+                    }
+                    else
+                    {
+                        dst[x, y] = lightSurface.GetBilinearSample(x, y);
+                    }
                 }
             }
         }
