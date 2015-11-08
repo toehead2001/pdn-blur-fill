@@ -169,27 +169,13 @@ namespace BlurFillEffect
             }
         }
 
-        #region User Entered Code
-        #region UICode
-        int Amount1 = 10; // [-100,100] Blur Radius
-        int Amount2 = -100; // [-100,100] Brightness
-        Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
-        bool Amount4 = true; // [0,1] Keep original image
-        #endregion
-
-        private BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
-
-        Surface enlargedSurface;
-        Surface bluredSurface;
-        Surface lightSurface;
-
         static Bitmap TrimBitmap(Bitmap source, double ratio, double offsetX, double offsetY)
         {
             Rectangle srcRect = default(Rectangle);
-            System.Drawing.Imaging.BitmapData data = null;
+            BitmapData data = null;
             try
             {
-                data = source.LockBits(new Rectangle(0, 0, source.Width, source.Height), System.Drawing.Imaging.ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                data = source.LockBits(new Rectangle(0, 0, source.Width, source.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
                 byte[] buffer = new byte[data.Height * data.Stride];
                 System.Runtime.InteropServices.Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
 
@@ -312,6 +298,20 @@ namespace BlurFillEffect
             source.Dispose();
             return dest;
         }
+
+        #region User Entered Code
+        #region UICode
+        int Amount1 = 10; // [-100,100] Blur Radius
+        int Amount2 = -100; // [-100,100] Brightness
+        Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
+        bool Amount4 = true; // [0,1] Keep original image
+        #endregion
+
+        private BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
+
+        private Surface enlargedSurface;
+        private Surface bluredSurface;
+        private Surface lightSurface;
 
         void Render(Surface dst, Surface src, Rectangle rect)
         {
