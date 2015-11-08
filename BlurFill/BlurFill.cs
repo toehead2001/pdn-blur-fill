@@ -145,11 +145,13 @@ namespace BlurFillEffect
             Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap();
 
             Bitmap croppedBitmap = TrimBitmap(srcBitmap, ratio, Amount3.First, Amount3.Second);
+            srcBitmap.Dispose();
 
             if (croppedBitmap == null)
                 croppedBitmap = new Bitmap(srcArgs.Surface.Width, srcArgs.Surface.Height);
 
             Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
+            croppedBitmap.Dispose();
 
             enlargedSurface = new Surface(srcArgs.Surface.Size);
             bluredSurface = new Surface(srcArgs.Surface.Size);
@@ -307,6 +309,7 @@ namespace BlurFillEffect
             {
                 graphics.DrawImage(source, destRect, srcRect, GraphicsUnit.Pixel);
             }
+            source.Dispose();
             return dest;
         }
 
