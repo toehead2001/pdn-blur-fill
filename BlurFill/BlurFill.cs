@@ -146,6 +146,9 @@ namespace BlurFillEffect
 
             Bitmap croppedBitmap = TrimBitmap(srcBitmap, ratio, Amount3.First, Amount3.Second);
 
+            if (croppedBitmap == null)
+                croppedBitmap = new Bitmap(srcArgs.Surface.Width, srcArgs.Surface.Height);
+
             Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
 
             enlargedSurface = new Surface(srcArgs.Surface.Size);
