@@ -135,12 +135,10 @@ namespace BlurFillEffect
             Amount3 = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Amount3).Value;
             Amount4 = newToken.GetProperty<BooleanProperty>(PropertyNames.Amount4).Value;
 
-            base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
-
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
-            double ratio = (float)selection.Height / (float)selection.Width;
+            double ratio = (double)selection.Height / selection.Width;
 
             Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap();
 
@@ -158,14 +156,17 @@ namespace BlurFillEffect
             lightSurface = new Surface(srcArgs.Surface.Size);
 
             enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
+
+
+            base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
         }
 
-        protected override unsafe void OnRender(Rectangle[] rois, int startIndex, int length)
+        protected override void OnRender(Rectangle[] renderRects, int startIndex, int length)
         {
             if (length == 0) return;
             for (int i = startIndex; i < startIndex + length; ++i)
             {
-                Render(DstArgs.Surface, SrcArgs.Surface, rois[i]);
+                Render(DstArgs.Surface, SrcArgs.Surface, renderRects[i]);
             }
         }
 
@@ -299,19 +300,18 @@ namespace BlurFillEffect
             return dest;
         }
 
-        #region User Entered Code
-        #region UICode
+        #region CodeLab
         int Amount1 = 10; // [-100,100] Blur Radius
         int Amount2 = -100; // [-100,100] Brightness
         Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
         bool Amount4 = true; // [0,1] Keep original image
         #endregion
 
-        private BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
+        readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
 
-        private Surface enlargedSurface;
-        private Surface bluredSurface;
-        private Surface lightSurface;
+        Surface enlargedSurface;
+        Surface bluredSurface;
+        Surface lightSurface;
 
         void Render(Surface dst, Surface src, Rectangle rect)
         {
@@ -350,6 +350,6 @@ namespace BlurFillEffect
                 }
             }
         }
-        #endregion
+
     }
 }
