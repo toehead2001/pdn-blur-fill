@@ -150,7 +150,8 @@ namespace BlurFillEffect
             Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
             croppedBitmap.Dispose();
 
-            enlargedSurface = new Surface(selection.Size);
+            if (enlargedSurface == null)
+                enlargedSurface = new Surface(selection.Size);
             enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
 
             if (alignedSurface == null)
@@ -172,8 +173,10 @@ namespace BlurFillEffect
                 alignedSurface = enlargedSurface;
             }
 
-            bluredSurface = new Surface(srcArgs.Surface.Size);
-            lightSurface = new Surface(srcArgs.Surface.Size);
+            if (bluredSurface == null)
+                bluredSurface = new Surface(srcArgs.Surface.Size);
+            if (lightSurface == null)
+                lightSurface = new Surface(srcArgs.Surface.Size);
 
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
