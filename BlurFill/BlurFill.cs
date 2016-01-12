@@ -68,8 +68,7 @@ namespace BlurFillEffect
         {
             get
             {
-                //return new Bitmap(typeof(BlurFill), "BlurFill.png");
-                return null;
+                return new Bitmap(typeof(BlurFill), "BlurFill.png");
             }
         }
 
