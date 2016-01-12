@@ -140,7 +140,7 @@ namespace BlurFillEffect
 
             double ratio = (double)selection.Height / selection.Width;
 
-            Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap();
+            Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap(selection);
 
             Bitmap croppedBitmap = TrimBitmap(srcBitmap, ratio, Amount3.First, Amount3.Second);
             srcBitmap.Dispose();
@@ -151,11 +151,30 @@ namespace BlurFillEffect
             Surface croppedSurface = Surface.CopyFromBitmap(croppedBitmap);
             croppedBitmap.Dispose();
 
-            enlargedSurface = new Surface(srcArgs.Surface.Size);
+            enlargedSurface = new Surface(selection.Size);
+            enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
+
+            if (alignedSurface == null)
+                alignedSurface = new Surface(srcArgs.Surface.Size);
+
+            if (selection.Size != srcArgs.Surface.Size)
+            {
+                for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(alignedSurface.Height, selection.Bottom + 200); y++)
+                {
+                    if (IsCancelRequested) return;
+                    for (int x = Math.Max(0, selection.Left - 200); x < Math.Min(alignedSurface.Width, selection.Right + 200); x++)
+                    {
+                        alignedSurface[x, y] = enlargedSurface.GetBilinearSampleClamped(x - selection.Left, y - selection.Top);
+                    }
+                }
+            }
+            else
+            {
+                alignedSurface = enlargedSurface;
+            }
+
             bluredSurface = new Surface(srcArgs.Surface.Size);
             lightSurface = new Surface(srcArgs.Surface.Size);
-
-            enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, croppedSurface);
 
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
@@ -310,6 +329,7 @@ namespace BlurFillEffect
         readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
 
         Surface enlargedSurface;
+        Surface alignedSurface;
         Surface bluredSurface;
         Surface lightSurface;
 
@@ -320,7 +340,7 @@ namespace BlurFillEffect
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
             PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
             BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, Amount1);
-            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(enlargedSurface));
+            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(alignedSurface));
             // Call the Gaussian Blur function
             blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
 
@@ -341,11 +361,11 @@ namespace BlurFillEffect
                 {
                     if (Amount4)
                     {
-                        dst[x, y] = normalOp.Apply(lightSurface.GetBilinearSample(x, y), src[x, y]);
+                        dst[x, y] = normalOp.Apply(lightSurface[x, y], src[x, y]);
                     }
                     else
                     {
-                        dst[x, y] = lightSurface.GetBilinearSample(x, y);
+                        dst[x, y] = lightSurface[x, y];
                     }
                 }
             }
