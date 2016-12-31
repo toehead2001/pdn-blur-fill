@@ -137,7 +137,7 @@ namespace BlurFillEffect
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
-            double ratio = (double)selection.Height / selection.Width;
+            float ratio = (float)selection.Height / selection.Width;
 
             Bitmap srcBitmap = srcArgs.Surface.CreateAliasedBitmap(selection);
 
@@ -191,7 +191,7 @@ namespace BlurFillEffect
             }
         }
 
-        static Bitmap TrimBitmap(Bitmap source, double ratio, double offsetX, double offsetY)
+        static Bitmap TrimBitmap(Bitmap source, float ratio, double offsetX, double offsetY)
         {
             Rectangle srcRect = default(Rectangle);
             BitmapData data = null;
@@ -297,22 +297,22 @@ namespace BlurFillEffect
             int bitmapWidth;
             int bitmapHeight;
 
-            if ((float)srcRect.Height <= (float)srcRect.Width * ratio)
+            if (srcRect.Height <= srcRect.Width * ratio)
             {
-                bitmapWidth = (int)(srcRect.Height / ratio);
+                bitmapWidth = (int)Math.Round(srcRect.Height / ratio);
                 bitmapHeight = srcRect.Height;
             }
             else
             {
                 bitmapWidth = srcRect.Width;
-                bitmapHeight = (int)(srcRect.Width * ratio);
+                bitmapHeight = (int)Math.Round(srcRect.Width * ratio);
             }
 
-            int bitmapOffsetX = (int)((bitmapWidth - srcRect.Width) / 2 - (offsetX * (bitmapWidth - srcRect.Width) / 2));
-            int bitmapOffsetY = (int)((bitmapHeight - srcRect.Height) / 2 - (offsetY * (bitmapHeight - srcRect.Height) / 2));
+            float bitmapOffsetX = (float)((bitmapWidth - srcRect.Width) / 2f - (offsetX * (bitmapWidth - srcRect.Width) / 2f));
+            float bitmapOffsetY = (float)((bitmapHeight - srcRect.Height) / 2f - (offsetY * (bitmapHeight - srcRect.Height) / 2f));
 
             Bitmap dest = new Bitmap(bitmapWidth, bitmapHeight);
-            Rectangle destRect = new Rectangle(bitmapOffsetX, bitmapOffsetY, srcRect.Width, srcRect.Height);
+            RectangleF destRect = new RectangleF(bitmapOffsetX, bitmapOffsetY, srcRect.Width, srcRect.Height);
             using (Graphics graphics = Graphics.FromImage(dest))
             {
                 graphics.DrawImage(source, destRect, srcRect, GraphicsUnit.Pixel);
