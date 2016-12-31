@@ -2,11 +2,11 @@
 using System.Runtime.InteropServices;
 
 [assembly: AssemblyTitle("Blur Fill")]
-[assembly: AssemblyDescription("")]
+[assembly: AssemblyDescription("Fill the transparent areas of the canvas")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("")]
+[assembly: AssemblyCompany("toe_head2001")]
 [assembly: AssemblyProduct("Blur Fill")]
-[assembly: AssemblyCopyright("Copyright © 2015 toe_head2001")]
+[assembly: AssemblyCopyright("Copyright © 2016 toe_head2001")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 [assembly: ComVisible(false)]
