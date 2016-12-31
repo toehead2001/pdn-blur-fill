@@ -285,7 +285,7 @@ namespace BlurFillEffect
                         break;
                 }
 
-                srcRect = Rectangle.FromLTRB(xMin, yMin, xMax, yMax);
+                srcRect = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
             }
             finally
             {
