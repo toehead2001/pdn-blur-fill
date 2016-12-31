@@ -47,7 +47,7 @@ namespace BlurFillEffect
         {
             get
             {
-                return new Uri("http://www.getpaint.net/redirect/plugins.html");
+                return new Uri("http://forums.getpaint.net/index.php?showtopic=32224");
             }
         }
     }
