@@ -197,7 +197,7 @@ namespace BlurFillEffect
             BitmapData data = null;
             try
             {
-                data = source.LockBits(new Rectangle(0, 0, source.Width, source.Height), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+                data = source.LockBits(new Rectangle(Point.Empty, source.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
                 byte[] buffer = new byte[data.Height * data.Stride];
                 System.Runtime.InteropServices.Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
 
