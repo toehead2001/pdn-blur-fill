@@ -351,21 +351,10 @@ namespace BlurFillEffect
             // Call the Brightness and Contrast Adjustment function
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
-            for (int y = rect.Top; y < rect.Bottom; y++)
-            {
-                if (IsCancelRequested) return;
-                for (int x = rect.Left; x < rect.Right; x++)
-                {
-                    if (Amount4)
-                    {
-                        dst[x, y] = normalOp.Apply(lightSurface[x, y], src[x, y]);
-                    }
-                    else
-                    {
-                        dst[x, y] = lightSurface[x, y];
-                    }
-                }
-            }
+            if (Amount4)
+                normalOp.Apply(lightSurface, rect.Location, src, rect.Location, rect.Size);
+
+            dst.CopySurface(lightSurface, rect.Location, rect);
         }
 
     }
