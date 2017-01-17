@@ -139,7 +139,7 @@ namespace BlurFillEffect
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
             float ratio = (float)selection.Height / selection.Width;
 
-            Bitmap croppedBitmap = TrimBitmap(srcArgs.Surface.CreateAliasedBitmap(selection), ratio, Amount3.First, Amount3.Second);
+            Bitmap croppedBitmap = TrimBitmap((Bitmap)srcArgs.Surface.CreateAliasedBitmap(selection).Clone(), ratio, Amount3.First, Amount3.Second);
             if (croppedBitmap == null)
                 croppedBitmap = new Bitmap(srcArgs.Surface.Width, srcArgs.Surface.Height);
 
