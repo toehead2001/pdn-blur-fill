@@ -196,6 +196,19 @@ namespace BlurFillEffect
             if (lightSurface == null)
                 lightSurface = new Surface(srcArgs.Surface.Size);
 
+            // Setup for calling the Gaussian Blur effect
+            PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
+            PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
+            BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, Amount1);
+            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(alignedSurface));
+
+            // Setup for calling the Brightness and Contrast Adjustment function
+            PropertyCollection bacProps = bacAdjustment.CreatePropertyCollection();
+            PropertyBasedEffectConfigToken bacParameters = new PropertyBasedEffectConfigToken(bacProps);
+            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, Amount2);
+            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
+            bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(lightSurface), new RenderArgs(bluredSurface));
+
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
         }
@@ -316,24 +329,14 @@ namespace BlurFillEffect
         Surface lightSurface;
         Surface TrimmedSurface;
 
+        readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
+        readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
+
         void Render(Surface dst, Surface src, Rectangle rect)
         {
-            // Setup for calling the Gaussian Blur effect
-            GaussianBlurEffect blurEffect = new GaussianBlurEffect();
-            PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
-            PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
-            BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, Amount1);
-            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(alignedSurface));
             // Call the Gaussian Blur function
             blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
 
-            // Setup for calling the Brightness and Contrast Adjustment function
-            BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
-            PropertyCollection bacProps = bacAdjustment.CreatePropertyCollection();
-            PropertyBasedEffectConfigToken bacParameters = new PropertyBasedEffectConfigToken(bacProps);
-            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, Amount2);
-            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
-            bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(lightSurface), new RenderArgs(bluredSurface));
             // Call the Brightness and Contrast Adjustment function
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
