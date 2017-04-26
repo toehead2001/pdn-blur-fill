@@ -11,73 +11,20 @@ namespace BlurFillEffect
 {
     public class PluginSupportInfo : IPluginSupportInfo
     {
-        public string Author
-        {
-            get
-            {
-                return ((AssemblyCopyrightAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false)[0]).Copyright;
-            }
-        }
-        public string Copyright
-        {
-            get
-            {
-                return ((AssemblyDescriptionAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false)[0]).Description;
-            }
-        }
-
-        public string DisplayName
-        {
-            get
-            {
-                return ((AssemblyProductAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyProductAttribute), false)[0]).Product;
-            }
-        }
-
-        public Version Version
-        {
-            get
-            {
-                return base.GetType().Assembly.GetName().Version;
-            }
-        }
-
-        public Uri WebsiteUri
-        {
-            get
-            {
-                return new Uri("http://forums.getpaint.net/index.php?showtopic=32224");
-            }
-        }
+        public string Author => ((AssemblyCopyrightAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false)[0]).Copyright;
+        public string Copyright => ((AssemblyDescriptionAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false)[0]).Description;
+        public string DisplayName => ((AssemblyProductAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyProductAttribute), false)[0]).Product;
+        public Version Version => base.GetType().Assembly.GetName().Version;
+        public Uri WebsiteUri => new Uri("https://forums.getpaint.net/index.php?showtopic=32224");
     }
 
     [PluginSupportInfo(typeof(PluginSupportInfo), DisplayName = "Blur Fill")]
 
     public class BlurFill : PropertyBasedEffect
     {
-        public static string StaticName
-        {
-            get
-            {
-                return "Blur Fill";
-            }
-        }
-
-        public static Image StaticIcon
-        {
-            get
-            {
-                return new Bitmap(typeof(BlurFill), "BlurFill.png");
-            }
-        }
-
-        public static string SubmenuName
-        {
-            get
-            {
-                return "Fill";
-            }
-        }
+        const string StaticName = "Blur Fill";
+        readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
+        const string SubmenuName = "Fill";
 
         public BlurFill()
             : base(StaticName, StaticIcon, SubmenuName, EffectFlags.Configurable)
