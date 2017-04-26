@@ -22,6 +22,22 @@ namespace BlurFillEffect
 
     public class BlurFill : PropertyBasedEffect
     {
+        int Amount1 = 10; // [-100,100] Blur Radius
+        int Amount2 = -100; // [-100,100] Brightness
+        Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
+        bool Amount4 = true; // [0,1] Keep original image
+
+        Surface enlargedSurface;
+        Surface alignedSurface;
+        Surface bluredSurface;
+        Surface lightSurface;
+        Surface TrimmedSurface;
+
+        readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
+        readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
+        readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
+
+
         const string StaticName = "Blur Fill";
         readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
         const string SubmenuName = "Fill";
@@ -260,24 +276,6 @@ namespace BlurFillEffect
 
             return trimmed;
         }
-
-        #region CodeLab
-        int Amount1 = 10; // [-100,100] Blur Radius
-        int Amount2 = -100; // [-100,100] Brightness
-        Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
-        bool Amount4 = true; // [0,1] Keep original image
-        #endregion
-
-        readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
-
-        Surface enlargedSurface;
-        Surface alignedSurface;
-        Surface bluredSurface;
-        Surface lightSurface;
-        Surface TrimmedSurface;
-
-        readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
-        readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
 
         void Render(Surface dst, Surface src, Rectangle rect)
         {
