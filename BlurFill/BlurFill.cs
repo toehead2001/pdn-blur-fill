@@ -6,7 +6,6 @@ using PaintDotNet;
 using PaintDotNet.Effects;
 using PaintDotNet.IndirectUI;
 using PaintDotNet.PropertySystem;
-using System.Drawing.Imaging;
 
 namespace BlurFillEffect
 {
@@ -137,17 +136,41 @@ namespace BlurFillEffect
 
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
-            float ratio = (float)selection.Height / selection.Width;
 
-            Bitmap croppedBitmap = TrimBitmap((Bitmap)srcArgs.Surface.CreateAliasedBitmap(selection).Clone(), ratio, Amount3.First, Amount3.Second);
-            if (croppedBitmap == null)
-                croppedBitmap = new Bitmap(srcArgs.Surface.Width, srcArgs.Surface.Height);
+            if (TrimmedSurface == null)
+            {
+                using (Surface selSurface = new Surface(selection.Size))
+                {
+                    selSurface.CopySurface(srcArgs.Surface, selection);
+                    TrimmedSurface = TrimBitmap(selSurface);
+                }
+
+                if (TrimmedSurface == null)
+                    TrimmedSurface = new Surface(selection.Size);
+            }
+
+            float ratio = (float)selection.Width / selection.Height;
+            Size ratioSize = new Size(TrimmedSurface.Width, TrimmedSurface.Height);
+            if (ratioSize.Width < ratioSize.Height * ratio)
+                ratioSize.Height = (int)Math.Round(TrimmedSurface.Width / ratio);
+            else if (ratioSize.Width > ratioSize.Height * ratio)
+                ratioSize.Width = (int)Math.Round(TrimmedSurface.Height * ratio);
+
+            Point offset = new Point
+            {
+                X = (int)Math.Round((ratioSize.Width - TrimmedSurface.Width) / 2f + (Amount3.First * (ratioSize.Width - TrimmedSurface.Width) / 2f)),
+                Y = (int)Math.Round((ratioSize.Height - TrimmedSurface.Height) / 2f + (Amount3.Second * (ratioSize.Height - TrimmedSurface.Height) / 2f))
+            };
+
 
             if (enlargedSurface == null)
                 enlargedSurface = new Surface(selection.Size);
 
-            enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, Surface.CopyFromBitmap(croppedBitmap));
-            croppedBitmap.Dispose();
+            using (Surface ratioSurface = new Surface(ratioSize))
+            {
+                ratioSurface.CopySurface(TrimmedSurface, offset);
+                enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, ratioSurface);
+            }
 
             if (alignedSurface == null)
                 alignedSurface = new Surface(srcArgs.Surface.Size);
@@ -186,134 +209,96 @@ namespace BlurFillEffect
             }
         }
 
-        static Bitmap TrimBitmap(Bitmap source, float ratio, double offsetX, double offsetY)
+        static Surface TrimBitmap(Surface source)
         {
-            Rectangle srcRect = default(Rectangle);
-            BitmapData data = null;
-            try
+            Rectangle srcRect = Rectangle.Empty;
+
+            int xMin = int.MaxValue,
+                xMax = int.MinValue,
+                yMin = int.MaxValue,
+                yMax = int.MinValue;
+
+            bool foundPixel = false;
+
+            // Find xMin
+            for (int x = 0; x < source.Width; x++)
             {
-                data = source.LockBits(new Rectangle(Point.Empty, source.Size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
-                byte[] buffer = new byte[data.Height * data.Stride];
-                System.Runtime.InteropServices.Marshal.Copy(data.Scan0, buffer, 0, buffer.Length);
-
-                int xMin = int.MaxValue,
-                    xMax = int.MinValue,
-                    yMin = int.MaxValue,
-                    yMax = int.MinValue;
-
-                bool foundPixel = false;
-
-                // Find xMin
-                for (int x = 0; x < data.Width; x++)
+                bool stop = false;
+                for (int y = 0; y < source.Height; y++)
                 {
-                    bool stop = false;
-                    for (int y = 0; y < data.Height; y++)
+                    if (source[x, y].A != 0)
                     {
-                        byte alpha = buffer[y * data.Stride + 4 * x + 3];
-                        if (alpha != 0)
-                        {
-                            xMin = x;
-                            stop = true;
-                            foundPixel = true;
-                            break;
-                        }
-                    }
-                    if (stop)
+                        xMin = x;
+                        stop = true;
+                        foundPixel = true;
                         break;
+                    }
                 }
+                if (stop)
+                    break;
+            }
 
-                // Image is empty...
-                if (!foundPixel)
-                    return null;
+            // Image is empty...
+            if (!foundPixel)
+                return null;
 
-                // Find yMin
-                for (int y = 0; y < data.Height; y++)
+            // Find yMin
+            for (int y = 0; y < source.Height; y++)
+            {
+                bool stop = false;
+                for (int x = xMin; x < source.Width; x++)
                 {
-                    bool stop = false;
-                    for (int x = xMin; x < data.Width; x++)
+                    if (source[x, y].A != 0)
                     {
-                        byte alpha = buffer[y * data.Stride + 4 * x + 3];
-                        if (alpha != 0)
-                        {
-                            yMin = y;
-                            stop = true;
-                            break;
-                        }
-                    }
-                    if (stop)
+                        yMin = y;
+                        stop = true;
                         break;
+                    }
                 }
+                if (stop)
+                    break;
+            }
 
-                // Find xMax
-                for (int x = data.Width - 1; x >= xMin; x--)
+            // Find xMax
+            for (int x = source.Width - 1; x >= xMin; x--)
+            {
+                bool stop = false;
+                for (int y = yMin; y < source.Height; y++)
                 {
-                    bool stop = false;
-                    for (int y = yMin; y < data.Height; y++)
+                    if (source[x, y].A != 0)
                     {
-                        byte alpha = buffer[y * data.Stride + 4 * x + 3];
-                        if (alpha != 0)
-                        {
-                            xMax = x;
-                            stop = true;
-                            break;
-                        }
-                    }
-                    if (stop)
+                        xMax = x;
+                        stop = true;
                         break;
+                    }
                 }
+                if (stop)
+                    break;
+            }
 
-                // Find yMax
-                for (int y = data.Height - 1; y >= yMin; y--)
+            // Find yMax
+            for (int y = source.Height - 1; y >= yMin; y--)
+            {
+                bool stop = false;
+                for (int x = xMin; x <= xMax; x++)
                 {
-                    bool stop = false;
-                    for (int x = xMin; x <= xMax; x++)
+                    if (source[x, y].A != 0)
                     {
-                        byte alpha = buffer[y * data.Stride + 4 * x + 3];
-                        if (alpha != 0)
-                        {
-                            yMax = y;
-                            stop = true;
-                            break;
-                        }
-                    }
-                    if (stop)
+                        yMax = y;
+                        stop = true;
                         break;
+                    }
                 }
-
-                srcRect = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
-            }
-            finally
-            {
-                if (data != null)
-                    source.UnlockBits(data);
+                if (stop)
+                    break;
             }
 
+            srcRect = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
 
-            int bitmapWidth;
-            int bitmapHeight;
+            Surface trimmed = new Surface(srcRect.Size);
+            trimmed.CopySurface(source, Point.Empty, srcRect);
 
-            if (srcRect.Height <= srcRect.Width * ratio)
-            {
-                bitmapWidth = (int)Math.Round(srcRect.Height / ratio);
-                bitmapHeight = srcRect.Height;
-            }
-            else
-            {
-                bitmapWidth = srcRect.Width;
-                bitmapHeight = (int)Math.Round(srcRect.Width * ratio);
-            }
-
-            float bitmapOffsetX = (float)((bitmapWidth - srcRect.Width) / 2f - (offsetX * (bitmapWidth - srcRect.Width) / 2f));
-            float bitmapOffsetY = (float)((bitmapHeight - srcRect.Height) / 2f - (offsetY * (bitmapHeight - srcRect.Height) / 2f));
-
-            Bitmap dest = new Bitmap(bitmapWidth, bitmapHeight);
-            RectangleF destRect = new RectangleF(bitmapOffsetX, bitmapOffsetY, srcRect.Width, srcRect.Height);
-            using (Graphics graphics = Graphics.FromImage(dest))
-            {
-                graphics.DrawImage(source, destRect, srcRect, GraphicsUnit.Pixel);
-            }
-            source.Dispose();
-            return dest;
+            return trimmed;
         }
 
         #region CodeLab
@@ -329,6 +314,7 @@ namespace BlurFillEffect
         Surface alignedSurface;
         Surface bluredSurface;
         Surface lightSurface;
+        Surface TrimmedSurface;
 
         void Render(Surface dst, Surface src, Rectangle rect)
         {
