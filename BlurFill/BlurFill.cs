@@ -30,7 +30,7 @@ namespace BlurFillEffect
         Surface enlargedSurface;
         Surface alignedSurface;
         Surface bluredSurface;
-        Surface lightSurface;
+        Surface brightSurface;
         Surface TrimmedSurface;
 
         readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
@@ -156,8 +156,8 @@ namespace BlurFillEffect
 
             if (bluredSurface == null)
                 bluredSurface = new Surface(srcArgs.Surface.Size);
-            if (lightSurface == null)
-                lightSurface = new Surface(srcArgs.Surface.Size);
+            if (brightSurface == null)
+                brightSurface = new Surface(srcArgs.Surface.Size);
 
             // Setup for calling the Gaussian Blur effect
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
@@ -170,7 +170,7 @@ namespace BlurFillEffect
             PropertyBasedEffectConfigToken bacParameters = new PropertyBasedEffectConfigToken(bacProps);
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, Amount2);
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
-            bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(lightSurface), new RenderArgs(bluredSurface));
+            bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(brightSurface), new RenderArgs(bluredSurface));
 
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
@@ -286,9 +286,9 @@ namespace BlurFillEffect
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
             if (Amount4)
-                normalOp.Apply(lightSurface, rect.Location, src, rect.Location, rect.Size);
+                normalOp.Apply(brightSurface, rect.Location, src, rect.Location, rect.Size);
 
-            dst.CopySurface(lightSurface, rect.Location, rect);
+            dst.CopySurface(brightSurface, rect.Location, rect);
         }
 
     }
