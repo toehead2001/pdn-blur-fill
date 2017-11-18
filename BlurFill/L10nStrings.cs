@@ -39,7 +39,7 @@ namespace BlurFillEffect
                 switch (UICulture)
                 {
                     case "ru":
-                        return string.Empty;
+                        return "Заполните прозрачные области холста";
                     default:
                         return "Fill the transparent areas of the canvas";
                 }
