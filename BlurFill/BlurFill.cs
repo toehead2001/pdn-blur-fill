@@ -12,14 +12,16 @@ namespace BlurFillEffect
     public class PluginSupportInfo : IPluginSupportInfo
     {
         public string Author => ((AssemblyCopyrightAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyCopyrightAttribute), false)[0]).Copyright;
-        public string Copyright => ((AssemblyDescriptionAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyDescriptionAttribute), false)[0]).Description;
-        public string DisplayName => ((AssemblyProductAttribute)base.GetType().Assembly.GetCustomAttributes(typeof(AssemblyProductAttribute), false)[0]).Product;
+        public string Copyright => L10nStrings.EffectDescription;
+        public string DisplayName => L10nStrings.EffectName;
         public Version Version => base.GetType().Assembly.GetName().Version;
         public Uri WebsiteUri => new Uri("https://forums.getpaint.net/index.php?showtopic=32224");
+
+        public string plugin_browser_Keywords => L10nStrings.EffectKeywords;
+        public string plugin_browser_Description => L10nStrings.EffectDescription;
     }
 
     [PluginSupportInfo(typeof(PluginSupportInfo), DisplayName = "Blur Fill")]
-
     public class BlurFill : PropertyBasedEffect
     {
         int Amount1 = 10; // [-100,100] Blur Radius
@@ -38,12 +40,10 @@ namespace BlurFillEffect
         readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
 
 
-        const string StaticName = "Blur Fill";
         readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
-        const string SubmenuName = "Fill";
 
         public BlurFill()
-            : base(StaticName, StaticIcon, SubmenuName, EffectFlags.Configurable)
+            : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, EffectFlags.Configurable)
         {
         }
 
@@ -71,9 +71,9 @@ namespace BlurFillEffect
         {
             ControlInfo configUI = CreateDefaultConfigUI(props);
 
-            configUI.SetPropertyControlValue(PropertyNames.Amount1, ControlInfoPropertyNames.DisplayName, "Blur Radius");
-            configUI.SetPropertyControlValue(PropertyNames.Amount2, ControlInfoPropertyNames.DisplayName, "Brightness");
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.DisplayName, "Position Adjust");
+            configUI.SetPropertyControlValue(PropertyNames.Amount1, ControlInfoPropertyNames.DisplayName, L10nStrings.BlurRadius);
+            configUI.SetPropertyControlValue(PropertyNames.Amount2, ControlInfoPropertyNames.DisplayName, L10nStrings.Brightness);
+            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.DisplayName, L10nStrings.Position);
             configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderSmallChangeX, 0.05);
             configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderLargeChangeX, 0.25);
             configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.UpDownIncrementX, 0.01);
@@ -85,7 +85,7 @@ namespace BlurFillEffect
             ImageResource imageResource3 = ImageResource.FromImage(EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
             configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
             configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.DisplayName, string.Empty);
-            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.Description, "Keep original image");
+            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.Description, L10nStrings.KeepOriginal);
 
             return configUI;
         }
