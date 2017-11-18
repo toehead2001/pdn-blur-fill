@@ -21,7 +21,7 @@ namespace BlurFillEffect
         public string plugin_browser_Description => L10nStrings.EffectDescription;
     }
 
-    [PluginSupportInfo(typeof(PluginSupportInfo), DisplayName = "Blur Fill")]
+    [PluginSupportInfo(typeof(PluginSupportInfo))]
     public class BlurFill : PropertyBasedEffect
     {
         int Amount1 = 10; // [-100,100] Blur Radius
