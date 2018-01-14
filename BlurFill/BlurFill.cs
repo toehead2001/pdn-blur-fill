@@ -101,16 +101,7 @@ namespace BlurFillEffect
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
             if (TrimmedSurface == null)
-            {
-                using (Surface selSurface = new Surface(selection.Size))
-                {
-                    selSurface.CopySurface(srcArgs.Surface, selection);
-                    TrimmedSurface = TrimBitmap(selSurface);
-                }
-
-                if (TrimmedSurface == null)
-                    TrimmedSurface = new Surface(selection.Size);
-            }
+                TrimmedSurface = TrimSurface(srcArgs.Surface, selection);
 
             float ratio = (float)selection.Width / selection.Height;
             Size ratioSize = new Size(TrimmedSurface.Width, TrimmedSurface.Height);
@@ -185,10 +176,8 @@ namespace BlurFillEffect
             }
         }
 
-        static Surface TrimBitmap(Surface source)
+        static Surface TrimSurface(Surface srcSurface, Rectangle srcBounds)
         {
-            Rectangle srcRect = Rectangle.Empty;
-
             int xMin = int.MaxValue,
                 xMax = int.MinValue,
                 yMin = int.MaxValue,
@@ -197,12 +186,12 @@ namespace BlurFillEffect
             bool foundPixel = false;
 
             // Find xMin
-            for (int x = 0; x < source.Width; x++)
+            for (int x = srcBounds.Left; x < srcBounds.Right; x++)
             {
                 bool stop = false;
-                for (int y = 0; y < source.Height; y++)
+                for (int y = srcBounds.Top; y < srcBounds.Bottom; y++)
                 {
-                    if (source[x, y].A != 0)
+                    if (srcSurface[x, y].A != 0)
                     {
                         xMin = x;
                         stop = true;
@@ -216,15 +205,15 @@ namespace BlurFillEffect
 
             // Image is empty...
             if (!foundPixel)
-                return null;
+                return new Surface(srcBounds.Size);
 
             // Find yMin
-            for (int y = 0; y < source.Height; y++)
+            for (int y = srcBounds.Top; y < srcBounds.Bottom; y++)
             {
                 bool stop = false;
-                for (int x = xMin; x < source.Width; x++)
+                for (int x = xMin; x < srcBounds.Right; x++)
                 {
-                    if (source[x, y].A != 0)
+                    if (srcSurface[x, y].A != 0)
                     {
                         yMin = y;
                         stop = true;
@@ -236,12 +225,12 @@ namespace BlurFillEffect
             }
 
             // Find xMax
-            for (int x = source.Width - 1; x >= xMin; x--)
+            for (int x = srcBounds.Right - 1; x >= xMin; x--)
             {
                 bool stop = false;
-                for (int y = yMin; y < source.Height; y++)
+                for (int y = yMin; y < srcBounds.Bottom; y++)
                 {
-                    if (source[x, y].A != 0)
+                    if (srcSurface[x, y].A != 0)
                     {
                         xMax = x;
                         stop = true;
@@ -253,12 +242,12 @@ namespace BlurFillEffect
             }
 
             // Find yMax
-            for (int y = source.Height - 1; y >= yMin; y--)
+            for (int y = srcBounds.Bottom - 1; y >= yMin; y--)
             {
                 bool stop = false;
                 for (int x = xMin; x <= xMax; x++)
                 {
-                    if (source[x, y].A != 0)
+                    if (srcSurface[x, y].A != 0)
                     {
                         yMax = y;
                         stop = true;
@@ -269,10 +258,10 @@ namespace BlurFillEffect
                     break;
             }
 
-            srcRect = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
+            Rectangle trimBounds = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
 
-            Surface trimmed = new Surface(srcRect.Size);
-            trimmed.CopySurface(source, Point.Empty, srcRect);
+            Surface trimmed = new Surface(trimBounds.Size);
+            trimmed.CopySurface(srcSurface, Point.Empty, trimBounds);
 
             return trimmed;
         }
