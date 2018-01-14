@@ -30,7 +30,7 @@ namespace BlurFillEffect
         bool Amount4 = true; // [0,1] Keep original image
 
         Surface enlargedSurface;
-        Surface alignedSurface;
+        Surface clampedSurface;
         Surface bluredSurface;
         Surface brightSurface;
         Rectangle trimmedBounds = Rectangle.Empty;
@@ -129,21 +129,21 @@ namespace BlurFillEffect
 
             if (selection.Size != srcArgs.Surface.Size)
             {
-                if (alignedSurface == null)
-                    alignedSurface = new Surface(srcArgs.Surface.Size);
+                if (clampedSurface == null)
+                    clampedSurface = new Surface(srcArgs.Surface.Size);
 
-                for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(alignedSurface.Height, selection.Bottom + 200); y++)
+                for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(clampedSurface.Height, selection.Bottom + 200); y++)
                 {
                     if (IsCancelRequested) return;
-                    for (int x = Math.Max(0, selection.Left - 200); x < Math.Min(alignedSurface.Width, selection.Right + 200); x++)
+                    for (int x = Math.Max(0, selection.Left - 200); x < Math.Min(clampedSurface.Width, selection.Right + 200); x++)
                     {
-                        alignedSurface[x, y] = enlargedSurface.GetBilinearSampleClamped(x - selection.Left, y - selection.Top);
+                        clampedSurface[x, y] = enlargedSurface.GetBilinearSampleClamped(x - selection.Left, y - selection.Top);
                     }
                 }
             }
             else
             {
-                alignedSurface = enlargedSurface;
+                clampedSurface = enlargedSurface;
             }
 
             if (bluredSurface == null)
@@ -155,7 +155,7 @@ namespace BlurFillEffect
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
             PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
             BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, Amount1);
-            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(alignedSurface));
+            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(bluredSurface), new RenderArgs(clampedSurface));
 
             // Setup for calling the Brightness and Contrast Adjustment function
             PropertyCollection bacProps = bacAdjustment.CreatePropertyCollection();
