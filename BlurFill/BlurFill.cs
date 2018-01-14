@@ -127,11 +127,11 @@ namespace BlurFillEffect
                 enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, ratioSurface);
             }
 
-            if (alignedSurface == null)
-                alignedSurface = new Surface(srcArgs.Surface.Size);
-
             if (selection.Size != srcArgs.Surface.Size)
             {
+                if (alignedSurface == null)
+                    alignedSurface = new Surface(srcArgs.Surface.Size);
+
                 for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(alignedSurface.Height, selection.Bottom + 200); y++)
                 {
                     if (IsCancelRequested) return;
