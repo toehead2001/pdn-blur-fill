@@ -33,7 +33,7 @@ namespace BlurFillEffect
         Surface alignedSurface;
         Surface bluredSurface;
         Surface brightSurface;
-        Surface TrimmedSurface;
+        Rectangle trimmedBounds = Rectangle.Empty;
 
         readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
         readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
@@ -100,29 +100,30 @@ namespace BlurFillEffect
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
-            if (TrimmedSurface == null)
-                TrimmedSurface = TrimSurface(srcArgs.Surface, selection);
+            if (trimmedBounds == Rectangle.Empty)
+                trimmedBounds = GetTrimmedBounds(srcArgs.Surface, selection);
 
             float ratio = (float)selection.Width / selection.Height;
-            Size ratioSize = new Size(TrimmedSurface.Width, TrimmedSurface.Height);
+            Size ratioSize = new Size(trimmedBounds.Width, trimmedBounds.Height);
             if (ratioSize.Width < ratioSize.Height * ratio)
-                ratioSize.Height = (int)Math.Round(TrimmedSurface.Width / ratio);
+                ratioSize.Height = (int)Math.Round(trimmedBounds.Width / ratio);
             else if (ratioSize.Width > ratioSize.Height * ratio)
-                ratioSize.Width = (int)Math.Round(TrimmedSurface.Height * ratio);
+                ratioSize.Width = (int)Math.Round(trimmedBounds.Height * ratio);
 
-            Point offset = new Point
+            Rectangle srcRect = new Rectangle
             {
-                X = (int)Math.Round((ratioSize.Width - TrimmedSurface.Width) / 2f + (Amount3.First * (ratioSize.Width - TrimmedSurface.Width) / 2f)),
-                Y = (int)Math.Round((ratioSize.Height - TrimmedSurface.Height) / 2f + (Amount3.Second * (ratioSize.Height - TrimmedSurface.Height) / 2f))
+                X = (int)Math.Round(trimmedBounds.X + Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f + (Amount3.First * Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f)),
+                Y = (int)Math.Round(trimmedBounds.Y + Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f + (Amount3.Second * Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f)),
+                Width = ratioSize.Width,
+                Height = ratioSize.Height
             };
-
 
             if (enlargedSurface == null)
                 enlargedSurface = new Surface(selection.Size);
 
             using (Surface ratioSurface = new Surface(ratioSize))
             {
-                ratioSurface.CopySurface(TrimmedSurface, offset);
+                ratioSurface.CopySurface(srcArgs.Surface, Point.Empty, srcRect);
                 enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, ratioSurface);
             }
 
@@ -176,7 +177,7 @@ namespace BlurFillEffect
             }
         }
 
-        static Surface TrimSurface(Surface srcSurface, Rectangle srcBounds)
+        static Rectangle GetTrimmedBounds(Surface srcSurface, Rectangle srcBounds)
         {
             int xMin = int.MaxValue,
                 xMax = int.MinValue,
@@ -205,7 +206,7 @@ namespace BlurFillEffect
 
             // Image is empty...
             if (!foundPixel)
-                return new Surface(srcBounds.Size);
+                return srcBounds;
 
             // Find yMin
             for (int y = srcBounds.Top; y < srcBounds.Bottom; y++)
@@ -258,12 +259,7 @@ namespace BlurFillEffect
                     break;
             }
 
-            Rectangle trimBounds = Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
-
-            Surface trimmed = new Surface(trimBounds.Size);
-            trimmed.CopySurface(srcSurface, Point.Empty, trimBounds);
-
-            return trimmed;
+            return Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
         }
 
         void Render(Surface dst, Surface src, Rectangle rect)
