@@ -273,5 +273,14 @@ namespace BlurFillEffect
             dst.CopySurface(effectsSurface, rect.Location, rect);
         }
 
+        protected override void OnDispose(bool disposing)
+        {
+            enlargedSurface?.Dispose();
+            clampedSurface?.Dispose();
+            effectsSurface?.Dispose();
+            blurEffect?.Dispose();
+            bacAdjustment?.Dispose();
+            base.OnDispose(disposing);
+        }
     }
 }
