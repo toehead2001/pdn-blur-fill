@@ -95,7 +95,7 @@ namespace BlurFillEffect
 
             Rectangle selection = this.EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
-            if (this.trimmedBounds == Rectangle.Empty)
+            if (this.trimmedBounds.IsEmpty)
             {
                 this.trimmedBounds = GetTrimmedBounds(srcArgs.Surface, selection);
             }
