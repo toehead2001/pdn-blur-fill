@@ -24,22 +24,21 @@ namespace BlurFillEffect
     [PluginSupportInfo(typeof(PluginSupportInfo))]
     public class BlurFill : PropertyBasedEffect
     {
-        int Amount1 = 10; // [-100,100] Blur Radius
-        int Amount2 = -100; // [-100,100] Brightness
-        Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
-        bool Amount4 = true; // [0,1] Keep original image
+        private int Amount1 = 10; // [-100,100] Blur Radius
+        private int Amount2 = -100; // [-100,100] Brightness
+        private Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
+        private bool Amount4 = true; // [0,1] Keep original image
 
-        Surface enlargedSurface;
-        Surface clampedSurface;
-        Surface effectsSurface;
-        Rectangle trimmedBounds = Rectangle.Empty;
+        private Surface enlargedSurface;
+        private Surface clampedSurface;
+        private Surface effectsSurface;
+        private Rectangle trimmedBounds = Rectangle.Empty;
 
-        readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
-        readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
-        readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
+        private readonly GaussianBlurEffect blurEffect = new GaussianBlurEffect();
+        private readonly BrightnessAndContrastAdjustment bacAdjustment = new BrightnessAndContrastAdjustment();
+        private readonly BinaryPixelOp normalOp = LayerBlendModeUtil.CreateCompositionOp(LayerBlendMode.Normal);
 
-
-        readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
+        private readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
 
         public BlurFill()
             : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, EffectFlags.Configurable)
@@ -56,12 +55,13 @@ namespace BlurFillEffect
 
         protected override PropertyCollection OnCreatePropertyCollection()
         {
-            List<Property> props = new List<Property>();
-
-            props.Add(new Int32Property(PropertyNames.Amount1, 10, 0, 200));
-            props.Add(new Int32Property(PropertyNames.Amount2, 0, -100, 100));
-            props.Add(new DoubleVectorProperty(PropertyNames.Amount3, Pair.Create(0.0, 0.0), Pair.Create(-1.0, -1.0), Pair.Create(+1.0, +1.0)));
-            props.Add(new BooleanProperty(PropertyNames.Amount4, true));
+            List<Property> props = new List<Property>
+            {
+                new Int32Property(PropertyNames.Amount1, 10, 0, 200),
+                new Int32Property(PropertyNames.Amount2, 0, -100, 100),
+                new DoubleVectorProperty(PropertyNames.Amount3, Pair.Create(0.0, 0.0), Pair.Create(-1.0, -1.0), Pair.Create(+1.0, +1.0)),
+                new BooleanProperty(PropertyNames.Amount4, true)
+            };
 
             return new PropertyCollection(props);
         }
@@ -95,7 +95,6 @@ namespace BlurFillEffect
             Amount2 = newToken.GetProperty<Int32Property>(PropertyNames.Amount2).Value;
             Amount3 = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Amount3).Value;
             Amount4 = newToken.GetProperty<BooleanProperty>(PropertyNames.Amount4).Value;
-
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
@@ -173,7 +172,6 @@ namespace BlurFillEffect
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
             bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(effectsSurface), new RenderArgs(effectsSurface));
 
-
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
         }
 
@@ -186,7 +184,7 @@ namespace BlurFillEffect
             }
         }
 
-        static Rectangle GetTrimmedBounds(Surface srcSurface, Rectangle srcBounds)
+        private static Rectangle GetTrimmedBounds(Surface srcSurface, Rectangle srcBounds)
         {
             int xMin = int.MaxValue,
                 xMax = int.MinValue,
@@ -281,7 +279,7 @@ namespace BlurFillEffect
             return Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
         }
 
-        void Render(Surface dst, Surface src, Rectangle rect)
+        private void Render(Surface dst, Surface src, Rectangle rect)
         {
             // Call the Gaussian Blur function
             blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
@@ -299,11 +297,15 @@ namespace BlurFillEffect
 
         protected override void OnDispose(bool disposing)
         {
-            enlargedSurface?.Dispose();
-            clampedSurface?.Dispose();
-            effectsSurface?.Dispose();
-            blurEffect?.Dispose();
-            bacAdjustment?.Dispose();
+            if (disposing)
+            {
+                enlargedSurface?.Dispose();
+                clampedSurface?.Dispose();
+                effectsSurface?.Dispose();
+                blurEffect?.Dispose();
+                bacAdjustment?.Dispose();
+            }
+
             base.OnDispose(disposing);
         }
     }
