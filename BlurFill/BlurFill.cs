@@ -100,14 +100,20 @@ namespace BlurFillEffect
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
             if (trimmedBounds == Rectangle.Empty)
+            {
                 trimmedBounds = GetTrimmedBounds(srcArgs.Surface, selection);
+            }
 
             float ratio = (float)selection.Width / selection.Height;
             Size ratioSize = new Size(trimmedBounds.Width, trimmedBounds.Height);
             if (ratioSize.Width < ratioSize.Height * ratio)
+            {
                 ratioSize.Height = (int)Math.Round(trimmedBounds.Width / ratio);
+            }
             else if (ratioSize.Width > ratioSize.Height * ratio)
+            {
                 ratioSize.Width = (int)Math.Round(trimmedBounds.Height * ratio);
+            }
 
             Rectangle srcRect = new Rectangle
             {
@@ -118,7 +124,9 @@ namespace BlurFillEffect
             };
 
             if (enlargedSurface == null)
+            {
                 enlargedSurface = new Surface(selection.Size);
+            }
 
             using (Surface ratioSurface = new Surface(ratioSize))
             {
@@ -129,7 +137,9 @@ namespace BlurFillEffect
             if (selection.Size != srcArgs.Surface.Size)
             {
                 if (clampedSurface == null)
+                {
                     clampedSurface = new Surface(srcArgs.Surface.Size);
+                }
 
                 for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(clampedSurface.Height, selection.Bottom + 200); y++)
                 {
@@ -146,7 +156,9 @@ namespace BlurFillEffect
             }
 
             if (effectsSurface == null)
+            {
                 effectsSurface = new Surface(srcArgs.Surface.Size);
+            }
 
             // Setup for calling the Gaussian Blur effect
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
@@ -198,12 +210,16 @@ namespace BlurFillEffect
                     }
                 }
                 if (stop)
+                {
                     break;
+                }
             }
 
             // Image is empty...
             if (!foundPixel)
+            {
                 return srcBounds;
+            }
 
             // Find yMin
             for (int y = srcBounds.Top; y < srcBounds.Bottom; y++)
@@ -219,7 +235,9 @@ namespace BlurFillEffect
                     }
                 }
                 if (stop)
+                {
                     break;
+                }
             }
 
             // Find xMax
@@ -236,7 +254,9 @@ namespace BlurFillEffect
                     }
                 }
                 if (stop)
+                {
                     break;
+                }
             }
 
             // Find yMax
@@ -253,7 +273,9 @@ namespace BlurFillEffect
                     }
                 }
                 if (stop)
+                {
                     break;
+                }
             }
 
             return Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
@@ -268,7 +290,9 @@ namespace BlurFillEffect
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
             if (Amount4)
+            {
                 normalOp.Apply(effectsSurface, rect.Location, src, rect.Location, rect.Size);
+            }
 
             dst.CopySurface(effectsSurface, rect.Location, rect);
         }
