@@ -24,10 +24,7 @@ namespace BlurFillEffect
     [PluginSupportInfo(typeof(PluginSupportInfo))]
     public class BlurFill : PropertyBasedEffect
     {
-        private int blurRadius = 10; // [-100,100] Blur Radius
-        private int brightness = -100; // [-100,100] Brightness
-        private Pair<double, double> position = Pair.Create(0.0, 0.0); // Position Adjust
-        private bool keepOriginal = true; // [0,1] Keep original image
+        private bool keepOriginal = true;
 
         private Surface enlargedSurface;
         private Surface clampedSurface;
@@ -80,8 +77,8 @@ namespace BlurFillEffect
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderLargeChangeY, 0.25);
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.UpDownIncrementY, 0.01);
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.DecimalPlaces, 3);
-            Rectangle selection3 = EnvironmentParameters.GetSelection(EnvironmentParameters.SourceSurface.Bounds).GetBoundsInt();
-            ImageResource imageResource3 = ImageResource.FromImage(EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
+            Rectangle selection3 = this.EnvironmentParameters.GetSelection(this.EnvironmentParameters.SourceSurface.Bounds).GetBoundsInt();
+            ImageResource imageResource3 = ImageResource.FromImage(this.EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
             configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.DisplayName, string.Empty);
             configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.Description, L10nStrings.KeepOriginal);
@@ -91,86 +88,86 @@ namespace BlurFillEffect
 
         protected override void OnSetRenderInfo(PropertyBasedEffectConfigToken newToken, RenderArgs dstArgs, RenderArgs srcArgs)
         {
-            blurRadius = newToken.GetProperty<Int32Property>(PropertyNames.BlurRadius).Value;
-            brightness = newToken.GetProperty<Int32Property>(PropertyNames.Brightness).Value;
-            position = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Position).Value;
-            keepOriginal = newToken.GetProperty<BooleanProperty>(PropertyNames.KeepOriginal).Value;
+            int blurRadius = newToken.GetProperty<Int32Property>(PropertyNames.BlurRadius).Value;
+            int brightness = newToken.GetProperty<Int32Property>(PropertyNames.Brightness).Value;
+            Pair<double, double> position = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Position).Value;
+            this.keepOriginal = newToken.GetProperty<BooleanProperty>(PropertyNames.KeepOriginal).Value;
 
-            Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
+            Rectangle selection = this.EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
-            if (trimmedBounds == Rectangle.Empty)
+            if (this.trimmedBounds == Rectangle.Empty)
             {
-                trimmedBounds = GetTrimmedBounds(srcArgs.Surface, selection);
+                this.trimmedBounds = GetTrimmedBounds(srcArgs.Surface, selection);
             }
 
             float ratio = (float)selection.Width / selection.Height;
-            Size ratioSize = new Size(trimmedBounds.Width, trimmedBounds.Height);
+            Size ratioSize = new Size(this.trimmedBounds.Width, this.trimmedBounds.Height);
             if (ratioSize.Width < ratioSize.Height * ratio)
             {
-                ratioSize.Height = (int)Math.Round(trimmedBounds.Width / ratio);
+                ratioSize.Height = (int)Math.Round(this.trimmedBounds.Width / ratio);
             }
             else if (ratioSize.Width > ratioSize.Height * ratio)
             {
-                ratioSize.Width = (int)Math.Round(trimmedBounds.Height * ratio);
+                ratioSize.Width = (int)Math.Round(this.trimmedBounds.Height * ratio);
             }
 
             Rectangle srcRect = new Rectangle
             {
-                X = (int)Math.Round(trimmedBounds.X + Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f + (position.First * Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f)),
-                Y = (int)Math.Round(trimmedBounds.Y + Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f + (position.Second * Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f)),
+                X = (int)Math.Round(this.trimmedBounds.X + Math.Abs(ratioSize.Width - this.trimmedBounds.Width) / 2f + (position.First * Math.Abs(ratioSize.Width - this.trimmedBounds.Width) / 2f)),
+                Y = (int)Math.Round(this.trimmedBounds.Y + Math.Abs(ratioSize.Height - this.trimmedBounds.Height) / 2f + (position.Second * Math.Abs(ratioSize.Height - this.trimmedBounds.Height) / 2f)),
                 Width = ratioSize.Width,
                 Height = ratioSize.Height
             };
 
-            if (enlargedSurface == null)
+            if (this.enlargedSurface == null)
             {
-                enlargedSurface = new Surface(selection.Size);
+                this.enlargedSurface = new Surface(selection.Size);
             }
 
             using (Surface ratioSurface = new Surface(ratioSize))
             {
                 ratioSurface.CopySurface(srcArgs.Surface, Point.Empty, srcRect);
-                enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, ratioSurface);
+                this.enlargedSurface.FitSurface(ResamplingAlgorithm.Bicubic, ratioSurface);
             }
 
             if (selection.Size != srcArgs.Surface.Size)
             {
-                if (clampedSurface == null)
+                if (this.clampedSurface == null)
                 {
-                    clampedSurface = new Surface(srcArgs.Surface.Size);
+                    this.clampedSurface = new Surface(srcArgs.Surface.Size);
                 }
 
-                for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(clampedSurface.Height, selection.Bottom + 200); y++)
+                for (int y = Math.Max(0, selection.Top - 200); y < Math.Min(this.clampedSurface.Height, selection.Bottom + 200); y++)
                 {
-                    if (IsCancelRequested) return;
-                    for (int x = Math.Max(0, selection.Left - 200); x < Math.Min(clampedSurface.Width, selection.Right + 200); x++)
+                    if (this.IsCancelRequested) return;
+                    for (int x = Math.Max(0, selection.Left - 200); x < Math.Min(this.clampedSurface.Width, selection.Right + 200); x++)
                     {
-                        clampedSurface[x, y] = enlargedSurface.GetBilinearSampleClamped(x - selection.Left, y - selection.Top);
+                        this.clampedSurface[x, y] = this.enlargedSurface.GetBilinearSampleClamped(x - selection.Left, y - selection.Top);
                     }
                 }
             }
             else
             {
-                clampedSurface = enlargedSurface;
+                this.clampedSurface = this.enlargedSurface;
             }
 
-            if (effectsSurface == null)
+            if (this.effectsSurface == null)
             {
-                effectsSurface = new Surface(srcArgs.Surface.Size);
+                this.effectsSurface = new Surface(srcArgs.Surface.Size);
             }
 
             // Setup for calling the Gaussian Blur effect
-            PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
+            PropertyCollection blurProps = this.blurEffect.CreatePropertyCollection();
             PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
             BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, blurRadius);
-            blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(effectsSurface), new RenderArgs(clampedSurface));
+            this.blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(this.effectsSurface), new RenderArgs(this.clampedSurface));
 
             // Setup for calling the Brightness and Contrast Adjustment function
-            PropertyCollection bacProps = bacAdjustment.CreatePropertyCollection();
+            PropertyCollection bacProps = this.bacAdjustment.CreatePropertyCollection();
             PropertyBasedEffectConfigToken bacParameters = new PropertyBasedEffectConfigToken(bacProps);
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, brightness);
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
-            bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(effectsSurface), new RenderArgs(effectsSurface));
+            this.bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(this.effectsSurface), new RenderArgs(this.effectsSurface));
 
             base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
         }
@@ -180,7 +177,7 @@ namespace BlurFillEffect
             if (length == 0) return;
             for (int i = startIndex; i < startIndex + length; ++i)
             {
-                Render(DstArgs.Surface, SrcArgs.Surface, renderRects[i]);
+                Render(this.DstArgs.Surface, this.SrcArgs.Surface, renderRects[i]);
             }
         }
 
@@ -282,28 +279,28 @@ namespace BlurFillEffect
         private void Render(Surface dst, Surface src, Rectangle rect)
         {
             // Call the Gaussian Blur function
-            blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
+            this.blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
 
             // Call the Brightness and Contrast Adjustment function
-            bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
+            this.bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
-            if (keepOriginal)
+            if (this.keepOriginal)
             {
-                normalOp.Apply(effectsSurface, rect.Location, src, rect.Location, rect.Size);
+                this.normalOp.Apply(this.effectsSurface, rect.Location, src, rect.Location, rect.Size);
             }
 
-            dst.CopySurface(effectsSurface, rect.Location, rect);
+            dst.CopySurface(this.effectsSurface, rect.Location, rect);
         }
 
         protected override void OnDispose(bool disposing)
         {
             if (disposing)
             {
-                enlargedSurface?.Dispose();
-                clampedSurface?.Dispose();
-                effectsSurface?.Dispose();
-                blurEffect?.Dispose();
-                bacAdjustment?.Dispose();
+                this.enlargedSurface?.Dispose();
+                this.clampedSurface?.Dispose();
+                this.effectsSurface?.Dispose();
+                this.blurEffect?.Dispose();
+                this.bacAdjustment?.Dispose();
             }
 
             base.OnDispose(disposing);
