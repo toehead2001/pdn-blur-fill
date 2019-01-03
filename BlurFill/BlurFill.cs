@@ -175,10 +175,19 @@ namespace BlurFillEffect
         protected override void OnRender(Rectangle[] renderRects, int startIndex, int length)
         {
             if (length == 0) return;
-            for (int i = startIndex; i < startIndex + length; ++i)
+
+            // Call the Gaussian Blur function
+            this.blurEffect.Render(renderRects, startIndex, length);
+
+            // Call the Brightness and Contrast Adjustment function
+            this.bacAdjustment.Render(renderRects, startIndex, length);
+
+            if (this.keepOriginal)
             {
-                Render(this.DstArgs.Surface, this.SrcArgs.Surface, renderRects[i]);
+                this.normalOp.Apply(this.effectsSurface, this.SrcArgs.Surface, renderRects, startIndex, length);
             }
+
+            this.DstArgs.Surface.CopySurface(this.effectsSurface, renderRects, startIndex, length);
         }
 
         private static Rectangle GetTrimmedBounds(Surface srcSurface, Rectangle srcBounds)
@@ -274,22 +283,6 @@ namespace BlurFillEffect
             }
 
             return Rectangle.FromLTRB(xMin, yMin, xMax + 1, yMax + 1);
-        }
-
-        private void Render(Surface dst, Surface src, Rectangle rect)
-        {
-            // Call the Gaussian Blur function
-            this.blurEffect.Render(new Rectangle[1] { rect }, 0, 1);
-
-            // Call the Brightness and Contrast Adjustment function
-            this.bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
-
-            if (this.keepOriginal)
-            {
-                this.normalOp.Apply(this.effectsSurface, rect.Location, src, rect.Location, rect.Size);
-            }
-
-            dst.CopySurface(this.effectsSurface, rect.Location, rect);
         }
 
         protected override void OnDispose(bool disposing)
