@@ -111,10 +111,11 @@ namespace BlurFillEffect
                 ratioSize.Width = (int)Math.Round(this.trimmedBounds.Height * ratio);
             }
 
+            PointF offsetForCenter = new PointF(Math.Abs(ratioSize.Width - this.trimmedBounds.Width) / 2f, Math.Abs(ratioSize.Height - this.trimmedBounds.Height) / 2f);
             Rectangle srcRect = new Rectangle
             {
-                X = (int)Math.Round(this.trimmedBounds.X + Math.Abs(ratioSize.Width - this.trimmedBounds.Width) / 2f + (position.First * Math.Abs(ratioSize.Width - this.trimmedBounds.Width) / 2f)),
-                Y = (int)Math.Round(this.trimmedBounds.Y + Math.Abs(ratioSize.Height - this.trimmedBounds.Height) / 2f + (position.Second * Math.Abs(ratioSize.Height - this.trimmedBounds.Height) / 2f)),
+                X = (int)Math.Round(this.trimmedBounds.X + offsetForCenter.X + (position.First * offsetForCenter.X)),
+                Y = (int)Math.Round(this.trimmedBounds.Y + offsetForCenter.Y + (position.Second * offsetForCenter.Y)),
                 Width = ratioSize.Width,
                 Height = ratioSize.Height
             };
