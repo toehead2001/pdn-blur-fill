@@ -24,10 +24,10 @@ namespace BlurFillEffect
     [PluginSupportInfo(typeof(PluginSupportInfo))]
     public class BlurFill : PropertyBasedEffect
     {
-        private int Amount1 = 10; // [-100,100] Blur Radius
-        private int Amount2 = -100; // [-100,100] Brightness
-        private Pair<double, double> Amount3 = Pair.Create(0.0, 0.0); // Position Adjust
-        private bool Amount4 = true; // [0,1] Keep original image
+        private int blurRadius = 10; // [-100,100] Blur Radius
+        private int brightness = -100; // [-100,100] Brightness
+        private Pair<double, double> position = Pair.Create(0.0, 0.0); // Position Adjust
+        private bool keepOriginal = true; // [0,1] Keep original image
 
         private Surface enlargedSurface;
         private Surface clampedSurface;
@@ -47,20 +47,20 @@ namespace BlurFillEffect
 
         public enum PropertyNames
         {
-            Amount1,
-            Amount2,
-            Amount3,
-            Amount4
+            BlurRadius,
+            Brightness,
+            Position,
+            KeepOriginal
         }
 
         protected override PropertyCollection OnCreatePropertyCollection()
         {
             List<Property> props = new List<Property>
             {
-                new Int32Property(PropertyNames.Amount1, 10, 0, 200),
-                new Int32Property(PropertyNames.Amount2, 0, -100, 100),
-                new DoubleVectorProperty(PropertyNames.Amount3, Pair.Create(0.0, 0.0), Pair.Create(-1.0, -1.0), Pair.Create(+1.0, +1.0)),
-                new BooleanProperty(PropertyNames.Amount4, true)
+                new Int32Property(PropertyNames.BlurRadius, 10, 0, 200),
+                new Int32Property(PropertyNames.Brightness, 0, -100, 100),
+                new DoubleVectorProperty(PropertyNames.Position, Pair.Create(0.0, 0.0), Pair.Create(-1.0, -1.0), Pair.Create(+1.0, +1.0)),
+                new BooleanProperty(PropertyNames.KeepOriginal, true)
             };
 
             return new PropertyCollection(props);
@@ -70,31 +70,31 @@ namespace BlurFillEffect
         {
             ControlInfo configUI = CreateDefaultConfigUI(props);
 
-            configUI.SetPropertyControlValue(PropertyNames.Amount1, ControlInfoPropertyNames.DisplayName, L10nStrings.BlurRadius);
-            configUI.SetPropertyControlValue(PropertyNames.Amount2, ControlInfoPropertyNames.DisplayName, L10nStrings.Brightness);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.DisplayName, L10nStrings.Position);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderSmallChangeX, 0.05);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderLargeChangeX, 0.25);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.UpDownIncrementX, 0.01);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderSmallChangeY, 0.05);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.SliderLargeChangeY, 0.25);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.UpDownIncrementY, 0.01);
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.DecimalPlaces, 3);
+            configUI.SetPropertyControlValue(PropertyNames.BlurRadius, ControlInfoPropertyNames.DisplayName, L10nStrings.BlurRadius);
+            configUI.SetPropertyControlValue(PropertyNames.Brightness, ControlInfoPropertyNames.DisplayName, L10nStrings.Brightness);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.DisplayName, L10nStrings.Position);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderSmallChangeX, 0.05);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderLargeChangeX, 0.25);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.UpDownIncrementX, 0.01);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderSmallChangeY, 0.05);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderLargeChangeY, 0.25);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.UpDownIncrementY, 0.01);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.DecimalPlaces, 3);
             Rectangle selection3 = EnvironmentParameters.GetSelection(EnvironmentParameters.SourceSurface.Bounds).GetBoundsInt();
             ImageResource imageResource3 = ImageResource.FromImage(EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
-            configUI.SetPropertyControlValue(PropertyNames.Amount3, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
-            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.DisplayName, string.Empty);
-            configUI.SetPropertyControlValue(PropertyNames.Amount4, ControlInfoPropertyNames.Description, L10nStrings.KeepOriginal);
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
+            configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.DisplayName, string.Empty);
+            configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.Description, L10nStrings.KeepOriginal);
 
             return configUI;
         }
 
         protected override void OnSetRenderInfo(PropertyBasedEffectConfigToken newToken, RenderArgs dstArgs, RenderArgs srcArgs)
         {
-            Amount1 = newToken.GetProperty<Int32Property>(PropertyNames.Amount1).Value;
-            Amount2 = newToken.GetProperty<Int32Property>(PropertyNames.Amount2).Value;
-            Amount3 = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Amount3).Value;
-            Amount4 = newToken.GetProperty<BooleanProperty>(PropertyNames.Amount4).Value;
+            blurRadius = newToken.GetProperty<Int32Property>(PropertyNames.BlurRadius).Value;
+            brightness = newToken.GetProperty<Int32Property>(PropertyNames.Brightness).Value;
+            position = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Position).Value;
+            keepOriginal = newToken.GetProperty<BooleanProperty>(PropertyNames.KeepOriginal).Value;
 
             Rectangle selection = EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
 
@@ -116,8 +116,8 @@ namespace BlurFillEffect
 
             Rectangle srcRect = new Rectangle
             {
-                X = (int)Math.Round(trimmedBounds.X + Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f + (Amount3.First * Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f)),
-                Y = (int)Math.Round(trimmedBounds.Y + Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f + (Amount3.Second * Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f)),
+                X = (int)Math.Round(trimmedBounds.X + Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f + (position.First * Math.Abs(ratioSize.Width - trimmedBounds.Width) / 2f)),
+                Y = (int)Math.Round(trimmedBounds.Y + Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f + (position.Second * Math.Abs(ratioSize.Height - trimmedBounds.Height) / 2f)),
                 Width = ratioSize.Width,
                 Height = ratioSize.Height
             };
@@ -162,13 +162,13 @@ namespace BlurFillEffect
             // Setup for calling the Gaussian Blur effect
             PropertyCollection blurProps = blurEffect.CreatePropertyCollection();
             PropertyBasedEffectConfigToken BlurParameters = new PropertyBasedEffectConfigToken(blurProps);
-            BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, Amount1);
+            BlurParameters.SetPropertyValue(GaussianBlurEffect.PropertyNames.Radius, blurRadius);
             blurEffect.SetRenderInfo(BlurParameters, new RenderArgs(effectsSurface), new RenderArgs(clampedSurface));
 
             // Setup for calling the Brightness and Contrast Adjustment function
             PropertyCollection bacProps = bacAdjustment.CreatePropertyCollection();
             PropertyBasedEffectConfigToken bacParameters = new PropertyBasedEffectConfigToken(bacProps);
-            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, Amount2);
+            bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Brightness, brightness);
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
             bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(effectsSurface), new RenderArgs(effectsSurface));
 
@@ -287,7 +287,7 @@ namespace BlurFillEffect
             // Call the Brightness and Contrast Adjustment function
             bacAdjustment.Render(new Rectangle[1] { rect }, 0, 1);
 
-            if (Amount4)
+            if (keepOriginal)
             {
                 normalOp.Apply(effectsSurface, rect.Location, src, rect.Location, rect.Size);
             }
