@@ -42,7 +42,7 @@ namespace BlurFillEffect
         {
         }
 
-        public enum PropertyNames
+        private enum PropertyNames
         {
             BlurRadius,
             Brightness,
