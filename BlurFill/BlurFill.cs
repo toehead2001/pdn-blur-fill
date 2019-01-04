@@ -38,7 +38,7 @@ namespace BlurFillEffect
         private readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
 
         public BlurFill()
-            : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, EffectFlags.Configurable)
+            : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, new EffectOptions() { Flags = EffectFlags.Configurable })
         {
         }
 
