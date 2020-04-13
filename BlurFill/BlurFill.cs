@@ -38,7 +38,7 @@ namespace BlurFillEffect
         private readonly static Image StaticIcon = new Bitmap(typeof(BlurFill), "BlurFill.png");
 
         public BlurFill()
-            : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, new EffectOptions() { Flags = EffectFlags.Configurable })
+            : base(L10nStrings.EffectName, StaticIcon, L10nStrings.EffectMenu, new EffectOptions { Flags = EffectFlags.Configurable })
         {
         }
 
@@ -77,23 +77,23 @@ namespace BlurFillEffect
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.SliderLargeChangeY, 0.25);
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.UpDownIncrementY, 0.01);
             configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.DecimalPlaces, 3);
-            Rectangle selection3 = this.EnvironmentParameters.GetSelection(this.EnvironmentParameters.SourceSurface.Bounds).GetBoundsInt();
-            ImageResource imageResource3 = ImageResource.FromImage(this.EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection3));
-            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.StaticImageUnderlay, imageResource3);
+            Rectangle selection = this.EnvironmentParameters.SelectionBounds;
+            ImageResource imageResource = ImageResource.FromImage(this.EnvironmentParameters.SourceSurface.CreateAliasedBitmap(selection));
+            configUI.SetPropertyControlValue(PropertyNames.Position, ControlInfoPropertyNames.StaticImageUnderlay, imageResource);
             configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.DisplayName, string.Empty);
             configUI.SetPropertyControlValue(PropertyNames.KeepOriginal, ControlInfoPropertyNames.Description, L10nStrings.KeepOriginal);
 
             return configUI;
         }
 
-        protected override void OnSetRenderInfo(PropertyBasedEffectConfigToken newToken, RenderArgs dstArgs, RenderArgs srcArgs)
+        protected override void OnSetRenderInfo(PropertyBasedEffectConfigToken token, RenderArgs dstArgs, RenderArgs srcArgs)
         {
-            int blurRadius = newToken.GetProperty<Int32Property>(PropertyNames.BlurRadius).Value;
-            int brightness = newToken.GetProperty<Int32Property>(PropertyNames.Brightness).Value;
-            Pair<double, double> position = newToken.GetProperty<DoubleVectorProperty>(PropertyNames.Position).Value;
-            this.keepOriginal = newToken.GetProperty<BooleanProperty>(PropertyNames.KeepOriginal).Value;
+            int blurRadius = token.GetProperty<Int32Property>(PropertyNames.BlurRadius).Value;
+            int brightness = token.GetProperty<Int32Property>(PropertyNames.Brightness).Value;
+            Pair<double, double> position = token.GetProperty<DoubleVectorProperty>(PropertyNames.Position).Value;
+            this.keepOriginal = token.GetProperty<BooleanProperty>(PropertyNames.KeepOriginal).Value;
 
-            Rectangle selection = this.EnvironmentParameters.GetSelection(srcArgs.Surface.Bounds).GetBoundsInt();
+            Rectangle selection = this.EnvironmentParameters.SelectionBounds;
 
             if (this.trimmedBounds.IsEmpty)
             {
@@ -170,7 +170,7 @@ namespace BlurFillEffect
             bacParameters.SetPropertyValue(BrightnessAndContrastAdjustment.PropertyNames.Contrast, 0);
             this.bacAdjustment.SetRenderInfo(bacParameters, new RenderArgs(this.effectsSurface), new RenderArgs(this.effectsSurface));
 
-            base.OnSetRenderInfo(newToken, dstArgs, srcArgs);
+            base.OnSetRenderInfo(token, dstArgs, srcArgs);
         }
 
         protected override void OnRender(Rectangle[] renderRects, int startIndex, int length)
